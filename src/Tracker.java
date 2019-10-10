@@ -204,15 +204,20 @@ public class Tracker extends Thread   implements ITracker { //
 
         peer_cnt++;
         peers_list.add(node);
+
+        //update Peers table
         insertToPeers(node);
         System.out.println("Registered new peer - " + node.peer_id);
         for (Map.Entry<String,Double> entry : files.entrySet()) {
         	String file_name = entry.getKey();
+          //update FileSizes table
         	double size = entry.getValue();
 	          file_list.put(file_name, size );
 	          insertToFileSizes(file_name, size);
 
         }
+
+        //update file chunks
         for (Map.Entry<String,ArrayList<String>> entry : fc.entrySet()) {
         	String filename = entry.getKey();
         	ArrayList<String> chunks = entry.getValue();
@@ -223,6 +228,8 @@ public class Tracker extends Thread   implements ITracker { //
 	            insertToFileChunks(filename, chunkname);
 	          }
         }
+
+        //update chunk Peers table
         for (Map.Entry<String,ArrayList<String>> entry : fc.entrySet()) {
           for(int i = 0; i < entry.getValue().size(); i++)
           {

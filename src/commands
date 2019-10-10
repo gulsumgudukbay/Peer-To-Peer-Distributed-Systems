@@ -1,0 +1,23 @@
+Eclipse Project BitTorrent
+
+javac -cp .:/home/sahithi/eclipse-workspace/BitTorrent/src/classes/mysql-connector-java-5.1.47.jar  -d classes *.java
+java -cp .:/home/sahithi/eclipse-workspace/BitTorrent/src/classes/mysql-connector-java-5.1.47.jar DBInit 1 trial
+java -cp .:/home/sahithi/eclipse-workspace/BitTorrent/src/classes/mysql-connector-java-5.1.47.jar Tracker trial
+java -cp .:/home/sahithi/eclipse-workspace/BitTorrent/src/classes/mysql-connector-java-5.1.47.jar Peer Peer1 127.0.0.1 2011 file2_1 abd 127.0.0.1 2014 Peer1 files/peer1 3306 10 rarest
+java -cp .:/home/sahithi/eclipse-workspace/BitTorrent/src/classes/mysql-connector-java-5.1.47.jar Peer Peer2 127.0.0.1 2013 file1_1 abd 127.0.0.1 2014 Peer2 files/peer2 3306 15 rarest
+java -cp .:/home/sahithi/eclipse-workspace/BitTorrent/src/classes/mysql-connector-java-5.1.47.jar Peer Peer3 127.0.0.1 2012 file2_1 abd 127.0.0.1 2014 Peer3 files/peer3 3306 10 rarest
+
+CLASSPATH=$CLASSPATH:/usr/share/java/mysql.jar
+export CLASSPATH
+
+javac -d classes *.java
+
+cd classes
+java DBInit 1 trial
+java DBInit 2 Peer1 ../files/peer1/
+java DBInit 2 Peer2 ../files/peer2/
+java DBInit 2 Peer3 ../files/peer3/
+java Tracker trial
+java Peer Peer1 127.0.0.1 2011 file3_1 abd 127.0.0.1 2014 Peer1 ../files/peer1 3306 10 rarest
+java Peer Peer2 127.0.0.1 2013 file1_1 abd 127.0.0.1 2014 Peer2 ../files/peer2 3306 15 rarest
+java Peer Peer3 127.0.0.1 2012 file2_1 abd 127.0.0.1 2014 Peer3 ../files/peer3 3306 20 rarest
