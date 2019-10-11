@@ -24,6 +24,9 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+import java.util.Random; 
+import java.util.List; 
+
 public class Peer implements IPeer{
 
     final public static int BUF_SIZE = 1024 * 64;
@@ -49,9 +52,11 @@ public class Peer implements IPeer{
     Map<String, ArrayList<String>> file_chunks; //file id, chunk ids
     Map<String, ArrayList<NodeStruct>> req_file_chunk_ids; // chunk, peer ids
     Queue<QueueStruct> file_req_q;
-    ArrayList<Pair> sz_chunks;
+	ArrayList<Pair> sz_chunks;
+	ArrayList<String> friends;
+	List<Request> requests;
 
-    private Peer(String id, String ip, int port, String request_file, String storage_file, String tip, int tport, String db_name, String dir_name, int dbport, String rar) {
+    private Peer(String id, String ip, int port, String request_file, String storage_file, String tip, int tport, String db_name, String dir_name, int dbport, String rar, String frnd1_id, String frnd2_id) {
     	my_IP = ip;
     	my_port = port;
     	current_requested_file = request_file;
@@ -66,14 +71,17 @@ public class Peer implements IPeer{
       my_db_name = db_name;
 	  my_node = new NodeStruct(my_id, my_IP, my_port);
 
-
+	  
       	my_file_list = new HashMap<String, Double>();
       	all_file_list = new HashMap<String, Double>();
       	file_chunks = new HashMap<String, ArrayList<String>>();
       	req_file_chunk_ids = new HashMap<String, ArrayList<NodeStruct>>();
       	file_req_q = new LinkedList<QueueStruct>();
+      	requests = new ArrayList<Request>();
     	sz_chunks = new ArrayList<Pair>(); 
-
+		friends = new ArrayList<String>();
+	  	friends.add(frnd1_id);
+	  	friends.add(frnd2_id);
       	//tracker_stub = null;
       	try {
             System.setProperty("java.security.policy","security.policy");
@@ -84,23 +92,6 @@ public class Peer implements IPeer{
             System.err.println("peer exception " + e.toString());
             e.printStackTrace();
         }
-      	
-      	
-    	/*try {
-    		//System.setSecurityManager(new RMISecurityManager());
-        	String url = "rmi://" + tracker_IP + ":" + tracker_port + "/ITracker" ;
-			tracker_stub = (ITracker) Naming.lookup(url);
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NotBoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
-
     }
     
 	public String getLookupName(String ip,int port,  String obj){
@@ -117,7 +108,8 @@ public class Peer implements IPeer{
     public void connectDB(){
         try{
           //Class.forName("com.mysql.cj.jdbc.Driver");
-      	Class.forName("com.mysql.jdbc.Driver");
+		  Class.forName("com.mysql.jdbc.Driver");
+		  System.out.println("db name: " +  my_db_name);
           String url = "jdbc:mysql://localhost:"+ my_db_port +"/"+my_db_name + "?useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
           //Connection con = DriverManager.getConnection(url, "root", "gulsumgudukbay");
           Connection con = DriverManager.getConnection(url, "root", "123456");
@@ -235,7 +227,6 @@ public class Peer implements IPeer{
     	//tells the tracker that it received a new chunk and registers
     	// assume  unregistered chunks is updated
     	//add chunk to my files list  and also send to tracker
-    	//TODO: update unregistered data in non volatile memory
     	if(my_file_list.containsKey(filename)){
     		double size = my_file_list.get(filename);
     		File file = new File(chunkname);
@@ -266,9 +257,6 @@ public class Peer implements IPeer{
     	updateTable(filename, chunkname, 1);
     	
     	System.out.println("registered new chunk " + chunkname + " from " + filename);
-
-
-
     }
 
     public void leaveRequest() {
@@ -355,38 +343,60 @@ public class Peer implements IPeer{
     	ByteArrayOutputStream bout = null;
     	
             try {
-            	//System.setSecurityManager(new RMISecurityManager());
-            	//String url = "rmi://" + peer.peer_ip + ":" + peer.peer_port + "/" + peer.peer_id;
-            	//IPeer peer_stub = (IPeer) Naming.lookup(url);
-            	//Registry peer_registry = LocateRegistry.getRegistry(peer.peer_ip,peer.peer_port);
-            	//IPeer peer_stub = (IPeer) peer_registry.lookup(peer.peer_id);
-            	src_file = my_directory + "/" + src_file;
-            	System.out.println("Sending chunk " + src_file + " to " + peer.peer_id  );
-            	/*Path fileLocation = Paths.get(src_file);
-            	byte[] data = Files.readAllBytes(fileLocation);*/
-                File file = new File(src_file);
-                FileInputStream fin = new FileInputStream(file);
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                byte[] data = new byte[32];
-                int nRead;
-                while ((nRead = fin.read(data, 0, data.length)) != -1) {
-                  buffer.write(data, 0, nRead);
-                }
-                System.out.println("buffer size: "+ buffer.size());
-                /*byte fileContent[] = new byte[2048];
-                fin.read(fileContent, 0, 2048);
-            	System.out.println("read byte: " + fileContent.length);*/
-            	/*OutputStream out = peer_stub.getOutputStream(src);
-            	System.out.println("sent chunk " + src_file + " from peer " + peer.peer_id);
-            	bout = (ByteArrayOutputStream) (out);*/
-            	return buffer.toByteArray();
+            	if(friends.contains(peer.peer_id)){
+					src_file = my_directory + "/" + src_file;
+					System.out.println("Sending chunk " + src_file + " to " + peer.peer_id  );
+					/*Path fileLocation = Paths.get(src_file);
+					byte[] data = Files.readAllBytes(fileLocation);*/
+					File file = new File(src_file);
+					FileInputStream fin = new FileInputStream(file);
+					ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+					byte[] data = new byte[32];
+					int nRead;
+					while ((nRead = fin.read(data, 0, data.length)) != -1) {
+					buffer.write(data, 0, nRead);
+					}
+					System.out.println("buffer size: "+ buffer.size());
+					
+					return buffer.toByteArray();
+				}else{
+					Request rq = new Request(peer, src_file);
+					requests.add(rq);
+
+					while(true){
+						Thread.sleep(15*1000); 
+						Random rand = new Random(); 
+						rq = requests.get(rand.nextInt(requests.size()));
+						if(peer.peer_id == rq.node.peer_id){
+							System.out.println("unchoking peer: " + peer.peer_id);
+							src_file = my_directory + "/" + src_file;
+							System.out.println("Sending chunk " + src_file + " to " + peer.peer_id  );
+							/*Path fileLocation = Paths.get(src_file);
+							byte[] data = Files.readAllBytes(fileLocation);*/
+							File file = new File(src_file);
+							FileInputStream fin = new FileInputStream(file);
+							ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+							byte[] data = new byte[32];
+							int nRead;
+							while ((nRead = fin.read(data, 0, data.length)) != -1) {
+							buffer.write(data, 0, nRead);
+							}
+							System.out.println("buffer size: "+ buffer.size());
+							
+							return buffer.toByteArray();
+						}
+					}
+
+				}
             }catch (RemoteException e1) {
     			// TODO Auto-generated catch block
     			e1.printStackTrace();
     		}catch (IOException e) {
     			// TODO Auto-generated catch block
     			e.printStackTrace();
-    		}
+    		}catch (InterruptedException e){
+				e.printStackTrace();
+			}
             
             return null;
     	}
@@ -561,9 +571,18 @@ public class Peer implements IPeer{
 	    Pair(int s, String c){
 	    	sz = s;
 	    	chunk = c;
+	    }   
+	}
+
+	private static  class Request 
+	{
+	    public NodeStruct node;
+	    public String chunk;
+	   
+	    Request(NodeStruct n, String c){
+	    	node = n;
+	    	chunk = c;
 	    }
- 
-	    
 	}
 	
 
@@ -575,7 +594,7 @@ public class Peer implements IPeer{
         try {
             System.setProperty("java.security.policy","security.policy");
 
-            Peer peer = new Peer(args[0], args[1], Integer.parseInt(args[2]), args[3], args[4], args[5], Integer.parseInt(args[6]), args[7], args[8], Integer.parseInt(args[9]), args[11]) ;
+            Peer peer = new Peer(args[0], args[1], Integer.parseInt(args[2]), args[3], args[4], args[5], Integer.parseInt(args[6]), args[7], args[8], Integer.parseInt(args[9]), args[11], args[12], args[13]);
             System.setProperty("java.rmi.server.hostname", peer.my_IP);
             IPeer mystub = (IPeer) UnicastRemoteObject.exportObject(peer, peer.my_port);
 
@@ -619,8 +638,5 @@ public class Peer implements IPeer{
             System.err.println("Server exception: " + e.toString());
             e.printStackTrace();
         }
-
-
-
     }
 }

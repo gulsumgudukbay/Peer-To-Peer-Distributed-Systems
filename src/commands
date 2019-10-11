@@ -17,7 +17,9 @@ java DBInit 1 trial
 java DBInit 2 Peer1 ../files/peer1/
 java DBInit 2 Peer2 ../files/peer2/
 java DBInit 2 Peer3 ../files/peer3/
+java DBInit 2 Peer4 ../files/peer4/
 java Tracker trial
-java Peer Peer1 127.0.0.1 2011 file3_1 abd 127.0.0.1 2014 Peer1 ../files/peer1 3306 10 rarest
-java Peer Peer2 127.0.0.1 2013 file1_1 abd 127.0.0.1 2014 Peer2 ../files/peer2 3306 15 rarest
-java Peer Peer3 127.0.0.1 2012 file2_1 abd 127.0.0.1 2014 Peer3 ../files/peer3 3306 20 rarest
+java Peer Peer1 127.0.0.1 2011 file4_1 abd 127.0.0.1 2014 Peer1 ../files/peer1 3306 10 rarest Peer2 Peer3
+java Peer Peer2 127.0.0.1 2013 file3_1 abd 127.0.0.1 2014 Peer2 ../files/peer2 3306 15 rarest Peer1 Peer4
+java Peer Peer3 127.0.0.1 2012 file4_1 abd 127.0.0.1 2014 Peer3 ../files/peer3 3306 20 rarest Peer1 Peer2
+java Peer Peer4 127.0.0.1 2015 file1_1 abd 127.0.0.1 2014 Peer5 ../files/peer4 3306 20 rarest Peer2 Peer3
