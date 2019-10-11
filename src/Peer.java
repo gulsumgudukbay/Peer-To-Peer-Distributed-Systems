@@ -345,7 +345,7 @@ public class Peer implements IPeer{
             try {
             	if(friends.contains(peer.peer_id)){
 					src_file = my_directory + "/" + src_file;
-					System.out.println("Sending chunk " + src_file + " to " + peer.peer_id  );
+					System.out.println("Sending chunk " + src_file + " to FRIEND " + peer.peer_id  );
 					/*Path fileLocation = Paths.get(src_file);
 					byte[] data = Files.readAllBytes(fileLocation);*/
 					File file = new File(src_file);
@@ -362,14 +362,14 @@ public class Peer implements IPeer{
 				}else{
 					Request rq = new Request(peer, src_file);
 					requests.add(rq);
-
+					System.out.println("CHOKING " + peer.peer_id);
 					while(true){
 						Thread.sleep(15*1000); 
 						Random rand = new Random(); 
 						int req_no = rand.nextInt(requests.size());
 						rq = requests.get(req_no);
 						if(peer.peer_id == rq.node.peer_id){
-							System.out.println("unchoking peer: " + peer.peer_id);
+							System.out.println("UNCHOKING: " + peer.peer_id);
 							src_file = my_directory + "/" + src_file;
 							System.out.println("Sending chunk " + src_file + " to " + peer.peer_id  );
 							/*Path fileLocation = Paths.get(src_file);
