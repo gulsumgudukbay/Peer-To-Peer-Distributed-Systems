@@ -366,7 +366,8 @@ public class Peer implements IPeer{
 					while(true){
 						Thread.sleep(15*1000); 
 						Random rand = new Random(); 
-						rq = requests.get(rand.nextInt(requests.size()));
+						int req_no = rand.nextInt(requests.size());
+						rq = requests.get(req_no);
 						if(peer.peer_id == rq.node.peer_id){
 							System.out.println("unchoking peer: " + peer.peer_id);
 							src_file = my_directory + "/" + src_file;
@@ -379,10 +380,10 @@ public class Peer implements IPeer{
 							byte[] data = new byte[32];
 							int nRead;
 							while ((nRead = fin.read(data, 0, data.length)) != -1) {
-							buffer.write(data, 0, nRead);
+								buffer.write(data, 0, nRead);
 							}
 							System.out.println("buffer size: "+ buffer.size());
-							
+							requests.remove(req_no);
 							return buffer.toByteArray();
 						}
 					}
